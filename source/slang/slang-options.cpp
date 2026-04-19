@@ -734,6 +734,10 @@ void initCommandOptions(CommandOptions& options)
          "-fvk-<vulkan-shift>-shift",
          kVulkanBindShiftLinks,
          SLANG_COUNT_OF(kVulkanBindShiftLinks)},
+        {OptionKind::VulkanBindRegister,
+         "-fvk-bind-register",
+         "-fvk-bind-register <type-number> <space> <binding> <set>",
+         "For example '-fvk-bind-register t5 4 10 2' binds t5 in space 4 to binding 10 in set 2."},
         {OptionKind::VulkanBindGlobals,
          "-fvk-bind-globals",
          "-fvk-bind-globals <N> <descriptor-set>",
@@ -2804,6 +2808,43 @@ SlangResult OptionsParser::_parse(int argc, char const* const* argv)
                         (int)set,
                         (int)shift);
                 }
+                break;
+            }
+        case OptionKind::VulkanBindRegister:
+            {
+                // -fvk-bind-register {b|s|t|u}<N> <space> <binding> <set>
+
+                CommandLineArg typeNumber;
+                SLANG_RETURN_ON_FAIL(m_reader.expectArg(typeNumber));
+
+                HLSLToVulkanLayoutOptions::Kind kind;
+
+                const auto slice = typeNumber.value.getUnownedSlice();
+                SLANG_RETURN_ON_FAIL(_getValue(typeNumber, slice.subString(0, 1), kind));
+
+                Int number;
+                if (SLANG_FAILED(StringUtil::parseInt(slice.subString(1, slice.getLength() - 1), number)))
+                {
+                    m_sink->diagnose(Diagnostics::ExpectingAnInteger{
+                        .value = typeNumber.value,
+                        .location = arg.loc,
+                    });
+                    return SLANG_FAIL;
+                }
+
+                Int space;
+                Int binding, set;
+                SLANG_RETURN_ON_FAIL(_expectInt(arg, space));
+                SLANG_RETURN_ON_FAIL(_expectInt(arg, binding));
+                SLANG_RETURN_ON_FAIL(_expectInt(arg, set));
+
+                linkage->m_optionSet.add(
+                    CompilerOptionName::VulkanBindRegister,
+                    (uint8_t)kind,
+                    (uint8_t)space,
+                    (uint16_t)number,
+                    (uint16_t)set,
+                    (uint16_t)binding);
                 break;
             }
         case OptionKind::VulkanBindGlobals:

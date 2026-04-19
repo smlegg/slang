@@ -1169,6 +1169,9 @@ typedef uint32_t SlangSizeT;
             146, // intValue0: register index; intValue1: register space — explicit
                  //   binding for the synthesized __slang_coverage buffer
 
+        VulkanBindRegister = 147, // intValue0 (bit 24-31): kind, (bit 16-23): space, (bit 0-15): number;
+                                  // intValue1 (bit 16-31): set, (bit 0-15): binding
+
         CountOf,
     };
 

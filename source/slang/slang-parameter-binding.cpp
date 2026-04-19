@@ -1322,13 +1322,21 @@ static void addExplicitParameterBindings_GLSL(
     }
 
     // If inference is not enabled for this kind, we can issue a warning
-    if (hlslToVulkanLayoutOptions &&
-        !hlslToVulkanLayoutOptions->canInfer(vulkanKind, hlslInfo.space))
+    auto hlslToVulkanBindMapping = HLSLToVulkanLayoutOptions::Binding{};
+    if (hlslToVulkanLayoutOptions)
     {
-        if (!warnedMissingVulkanLayoutModifier)
+        // First, check for an explicit bind mapping
+        hlslToVulkanBindMapping =
+            hlslToVulkanLayoutOptions->getBinding(vulkanKind, hlslInfo.index, hlslInfo.space);
+
+        if (!hlslToVulkanBindMapping.isSet() &&
+            !hlslToVulkanLayoutOptions->canInfer(vulkanKind, hlslInfo.space))
         {
-            warnedMissingVulkanLayoutModifier =
-                _maybeDiagnoseMissingVulkanLayoutModifier(context, varDecl.as<VarDeclBase>());
+            if (!warnedMissingVulkanLayoutModifier)
+            {
+                warnedMissingVulkanLayoutModifier =
+                    _maybeDiagnoseMissingVulkanLayoutModifier(context, varDecl.as<VarDeclBase>());
+            }
         }
     }
 
@@ -1349,14 +1357,27 @@ static void addExplicitParameterBindings_GLSL(
         }
     }
 
-    // We use the HLSL binding directly (even though this notionally for GLSL/Vulkan)
-    // We'll do the shifting at later later point in _maybeApplyHLSLToVulkanShifts
-    if (!info[kResInfo].resInfo)
-        info[kResInfo].resInfo = typeLayout->findOrAddResourceInfo(hlslInfo.kind);
+    if (hlslToVulkanBindMapping.isSet())
+    {
+        info[kResInfo].resInfo =
+            typeLayout->findOrAddResourceInfo(LayoutResourceKind::DescriptorTableSlot);
+        info[kResInfo].resInfo->count = 1;
 
-    info[kResInfo].semanticInfo.kind = info[kResInfo].resInfo->kind;
-    info[kResInfo].semanticInfo.index = UInt(hlslInfo.index);
-    info[kResInfo].semanticInfo.space = UInt(hlslInfo.space);
+        info[kResInfo].semanticInfo.kind = info[kResInfo].resInfo->kind;
+        info[kResInfo].semanticInfo.index = UInt(hlslToVulkanBindMapping.index);
+        info[kResInfo].semanticInfo.space = UInt(hlslToVulkanBindMapping.set);
+    }
+    else
+    {
+        // We use the HLSL binding directly (even though this notionally for GLSL/Vulkan)
+        // We'll do the shifting at later later point in _maybeApplyHLSLToVulkanShifts
+        if (!info[kResInfo].resInfo)
+            info[kResInfo].resInfo = typeLayout->findOrAddResourceInfo(hlslInfo.kind);
+
+        info[kResInfo].semanticInfo.kind = info[kResInfo].resInfo->kind;
+        info[kResInfo].semanticInfo.index = UInt(hlslInfo.index);
+        info[kResInfo].semanticInfo.space = UInt(hlslInfo.space);
+    }
     const LayoutSize count = info[kResInfo].resInfo->count;
 
     addExplicitParameterBinding(

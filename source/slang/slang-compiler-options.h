@@ -70,6 +70,28 @@ struct CompilerOptionValue
         return value;
     }
 
+    void unpackInt5(uint8_t& v0, uint8_t& v1, uint16_t& v2, uint16_t& v3, uint16_t& v4)
+    {
+        v0 = intValue >> 24;
+        v1 = ((unsigned int)intValue >> 16) & 0xFF;
+        v2 = intValue & 0xFFFF;
+        v3 = (unsigned int)intValue2 >> 16;
+        v4 = intValue2 & 0xFFFF;
+    }
+
+    static CompilerOptionValue fromInt5(
+        uint8_t v0,
+        uint8_t v1,
+        uint16_t v2,
+        uint16_t v3,
+        uint16_t v4)
+    {
+        CompilerOptionValue value;
+        value.intValue = (v0 << 24) | (v1 << 16) | v2;
+        value.intValue2 = (v3 << 16) | v4;
+        return value;
+    }
+
     static CompilerOptionValue fromString(String val)
     {
         CompilerOptionValue value;
@@ -207,6 +229,10 @@ struct CompilerOptionSet
     void add(CompilerOptionName name, uint8_t intVal, int intVal2, int intVal3)
     {
         add(name, CompilerOptionValue::fromInt3(intVal, intVal2, intVal3));
+    }
+    void add(CompilerOptionName name, uint8_t intVal, uint8_t intVal2, uint16_t intVal3, uint16_t intVal4, uint16_t intVal5)
+    {
+        add(name, CompilerOptionValue::fromInt5(intVal, intVal2, intVal3, intVal4, intVal5));
     }
     void add(CompilerOptionName name, String stringVal)
     {

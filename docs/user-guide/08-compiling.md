@@ -499,8 +499,8 @@ Two scenarios are provided, one in which the entry point is compiled in the same
 
 ```hlsl
 // lib.slang
-public int foo(int a) 
-{ 
+public int foo(int a)
+{
     return a + 1;
 }
 ```
@@ -1061,6 +1061,7 @@ meanings of their `CompilerOptionValue` encodings.
 | Optimization | Specifies the optimization level. `intValue0` encodes the value for the setting defined in the `SlangOptimizationLevel` enum. |
 | Obfuscate | Specifies whether or not to turn on obfuscation. When obfuscation is on, Slang will strip variable and function names from the target code and replace them with hash values. `intValue0` encodes a bool value for the setting. |
 | VulkanBindShift | Specifies the `-fvk-bind-shift` option. `intValue0` (higher 8 bits): kind, `intValue0` (lower bits): set; `intValue1`: shift. |
+| VulkanBindRegister | Specified the `-fvk-bind-register` option.  `intvalue0` (bit 24-31): kind, (bit 16-23): space, (bit 0-15): number; `intValue1` (bit 16-31): set, (bit 0-15): binding. |
 | VulkanBindGlobals | Specifies the `-fvk-bind-globals` option. `intValue0`: index, `intValue`: set. |
 | VulkanInvertY | Specifies the `-fvk-invert-y` option. `intValue0` specifies a bool value for the setting. |
 | VulkanUseDxPositionW | Specifies the `-fvk-use-dx-position-w` option. `intValue0` specifies a bool value for the setting. |

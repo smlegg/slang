@@ -114,6 +114,34 @@ void CompilerOptionSet::writeCommandLineArgs(Session* globalSession, StringBuild
                 sb << " " << shift << " " << set;
             }
             break;
+        case CompilerOptionName::VulkanBindRegister: // intValue0 (bit 24-31): kind, (bit 16-23): space, (bit 0-15): number;
+                                                     // intValue1 (bit 16-31): set, (bit 0-15): binding
+            for (auto v : option.value)
+            {
+                uint8_t kind, space;
+                uint16_t number, set, binding;
+                v.unpackInt5(kind, space, number, set, binding);
+                sb << " -fvk-bind-register ";
+                switch ((HLSLToVulkanLayoutOptions::Kind)(kind))
+                {
+                case HLSLToVulkanLayoutOptions::Kind::UnorderedAccess:
+                    sb << "u";
+                    break;
+                case HLSLToVulkanLayoutOptions::Kind::Sampler:
+                    sb << "s";
+                    break;
+                case HLSLToVulkanLayoutOptions::Kind::ShaderResource:
+                    sb << "t";
+                    break;
+                case HLSLToVulkanLayoutOptions::Kind::ConstantBuffer:
+                    sb << "b";
+                    break;
+                default:
+                    continue;
+                }
+                sb << number << " " << space << " " << binding << " " << set;
+            }
+            break;
         case CompilerOptionName::VulkanBindShiftAll: // intValue0: set; intValue1: shift
             for (auto v : option.value)
             {
@@ -201,6 +229,7 @@ bool CompilerOptionSet::allowDuplicate(CompilerOptionName name)
     case CompilerOptionName::Capability:
     case CompilerOptionName::DownstreamArgs:
     case CompilerOptionName::VulkanBindShift:
+    case CompilerOptionName::VulkanBindRegister:
     case CompilerOptionName::VulkanBindShiftAll:
     case CompilerOptionName::TypeConformance:
     case CompilerOptionName::DumpIRBefore:

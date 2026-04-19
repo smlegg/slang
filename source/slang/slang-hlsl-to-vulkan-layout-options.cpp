@@ -37,6 +37,14 @@ void HLSLToVulkanLayoutOptions::loadFromOptionSet(CompilerOptionSet& optionSet)
     {
         setAllShift((Kind)v.intValue, v.intValue2);
     }
+    auto binds = optionSet.getArray(CompilerOptionName::VulkanBindRegister);
+    for (auto v : binds)
+    {
+        uint8_t kind, space;
+        uint16_t number, set, binding;
+        v.unpackInt5(kind, space, number, set, binding);
+        setBinding((Kind)kind, number, space, binding, set);
+    }
     auto shifts = optionSet.getArray(CompilerOptionName::VulkanBindShift);
     for (auto v : shifts)
     {
@@ -120,6 +128,29 @@ Index HLSLToVulkanLayoutOptions::getShift(Kind kind, Index set) const
         return m_allShifts[Index(kind)];
     }
     return kInvalidShift;
+}
+
+void HLSLToVulkanLayoutOptions::setBinding(
+    Kind kind,
+    Index number,
+    Index space,
+    Index binding,
+    Index set)
+{
+    BindingKey key{kind, number, space};
+    m_binds.set(key, Binding{set, binding});
+}
+
+HLSLToVulkanLayoutOptions::Binding HLSLToVulkanLayoutOptions::getBinding(
+    Kind kind,
+    Index number,
+    Index space)
+{
+    if (auto ptr = m_binds.tryGetValue(BindingKey{kind, number, space}))
+    {
+        return *ptr;
+    }
+    return Binding{};
 }
 
 bool HLSLToVulkanLayoutOptions::hasState() const

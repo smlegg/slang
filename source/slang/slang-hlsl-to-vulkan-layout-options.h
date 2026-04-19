@@ -109,6 +109,29 @@ public:
         Index set; ///< The set this shift is associated with
     };
 
+    struct BindingKey
+    {
+        typedef BindingKey ThisType;
+
+        bool operator==(const ThisType& rhs) const
+        {
+            return kind == rhs.kind && number == rhs.number && space == rhs.space;
+        }
+        bool operator!=(const ThisType& rhs) const { return !(*this == rhs); }
+
+        HashCode getHashCode() const
+        {
+            return combineHash(
+                Slang::getHashCode(kind),
+                Slang::getHashCode(number),
+                Slang::getHashCode(space));
+        }
+
+        Kind kind;    ///< The kind this entry is for
+        Index number; ///< The register number this entry is for
+        Index space;  ///< The register space this entry is for
+    };
+
     /// Set the the all option for the kind.
     void setAllShift(Kind kind, Index shift);
 
@@ -118,11 +141,20 @@ public:
     /// Get the shift. Returns kInvalidShift if no shift is found
     Index getShift(Kind kind, Index set) const;
 
+    /// Set direct binding for register
+    void setBinding(Kind kind, Index number, Index space, Index binding, Index set);
+
+    /// Get direct register binding.  Returns invalid binding if none is found
+    Binding getBinding(Kind kind, Index number, Index space);
+
     /// True as global binds set
     bool hasGlobalsBinding() const { return m_globalsBinding.isSet(); }
 
     /// True if holds state such that vulkan bindings can be inferred from HLSL bindings
-    bool canInferBindings() const { return m_kindShiftEnabledFlags != 0; }
+    bool canInferBindings() const
+    {
+        return m_kindShiftEnabledFlags != 0 || m_binds.getCount() != 0;
+    }
 
     /// True if the kind/set can be inferred
     bool canInfer(Kind kind, Index set) const { return getShift(kind, set) != kInvalidShift; }
@@ -197,6 +229,9 @@ protected:
 
     /// Maps a key to the amount of shift
     Dictionary<Key, Index> m_shifts;
+
+    /// Map of direct register bindings
+    Dictionary<BindingKey, Binding> m_binds;
 
     /// If set, will use the original entry point name in the generated SPIRV instead of "main".
     bool m_useOriginalEntryPointName = false;
