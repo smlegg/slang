@@ -2120,85 +2120,87 @@ ScalarizedVal createGLSLGlobalVaryingsImpl(
         // and generate a variable for each of them.
 
         auto structTypeLayout = as<IRStructTypeLayout>(typeLayout);
-        SLANG_ASSERT(structTypeLayout);
-        RefPtr<ScalarizedTupleValImpl> tupleValImpl = new ScalarizedTupleValImpl();
-
-        // Since we are going to recurse into struct fields,
-        // we need to create a new node in `outerParamInfo` to keep track of
-        // the access chain to get to the new leafVar.
-        OuterParamInfoLink fieldParentInfo;
-        fieldParentInfo.next = outerParamInfo;
-
-        // Construct the actual type for the tuple (including any outer arrays)
-        IRType* fullType = type;
-        for (auto dd = declarator; dd; dd = dd->next)
+        if (structTypeLayout)
         {
-            switch (dd->flavor)
+            RefPtr<ScalarizedTupleValImpl> tupleValImpl = new ScalarizedTupleValImpl();
+
+            // Since we are going to recurse into struct fields,
+            // we need to create a new node in `outerParamInfo` to keep track of
+            // the access chain to get to the new leafVar.
+            OuterParamInfoLink fieldParentInfo;
+            fieldParentInfo.next = outerParamInfo;
+
+            // Construct the actual type for the tuple (including any outer arrays)
+            IRType* fullType = type;
+            for (auto dd = declarator; dd; dd = dd->next)
             {
-            case GlobalVaryingDeclarator::Flavor::meshOutputVertices:
-            case GlobalVaryingDeclarator::Flavor::meshOutputIndices:
-            case GlobalVaryingDeclarator::Flavor::meshOutputPrimitives:
-            case GlobalVaryingDeclarator::Flavor::array:
+                switch (dd->flavor)
                 {
-                    fullType = builder->getArrayType(fullType, dd->elementCount);
+                case GlobalVaryingDeclarator::Flavor::meshOutputVertices:
+                case GlobalVaryingDeclarator::Flavor::meshOutputIndices:
+                case GlobalVaryingDeclarator::Flavor::meshOutputPrimitives:
+                case GlobalVaryingDeclarator::Flavor::array:
+                    {
+                        fullType = builder->getArrayType(fullType, dd->elementCount);
+                    }
+                    break;
                 }
-                break;
             }
-        }
 
-        tupleValImpl->type = fullType;
+            tupleValImpl->type = fullType;
 
-        // Okay, we want to walk through the fields here, and
-        // generate one variable for each.
-        UInt fieldCounter = 0;
-        auto nameSBLength = nameHintSB.getLength();
+            // Okay, we want to walk through the fields here, and
+            // generate one variable for each.
+            UInt fieldCounter = 0;
+            auto nameSBLength = nameHintSB.getLength();
 
-        for (auto field : structType->getFields())
-        {
-            UInt fieldIndex = fieldCounter++;
-
-            auto fieldLayout = structTypeLayout->getFieldLayout(fieldIndex);
-
-            UInt fieldBindingIndex = bindingIndex;
-            UInt fieldBindingSpace = bindingSpace;
-            if (auto fieldResInfo = fieldLayout->findOffsetAttr(kind))
+            for (auto field : structType->getFields())
             {
-                fieldBindingIndex += fieldResInfo->getOffset();
-                fieldBindingSpace += fieldResInfo->getSpace();
-            }
-            nameHintSB.reduceLength(nameSBLength);
-            if (auto fieldNameHint = field->getKey()->findDecoration<IRNameHintDecoration>())
-            {
-                if (nameHintSB.getLength() != 0)
-                    nameHintSB << ".";
-                nameHintSB << fieldNameHint->getName();
-            }
-            fieldParentInfo.outerParam = field;
-            auto fieldVal = createGLSLGlobalVaryingsImpl(
-                context,
-                codeGenContext,
-                builder,
-                field->getFieldType(),
-                fieldLayout,
-                fieldLayout->getTypeLayout(),
-                kind,
-                stage,
-                fieldBindingIndex,
-                fieldBindingSpace,
-                declarator,
-                &fieldParentInfo,
-                field,
-                nameHintSB);
+                UInt fieldIndex = fieldCounter++;
 
-            ScalarizedTupleValImpl::Element element = {};
-            if (fieldVal.flavor != ScalarizedVal::Flavor::none)
-                element.val = fieldVal;
-            element.key = field->getKey();
+                auto fieldLayout = structTypeLayout->getFieldLayout(fieldIndex);
 
-            tupleValImpl->elements.add(element);
+                UInt fieldBindingIndex = bindingIndex;
+                UInt fieldBindingSpace = bindingSpace;
+                if (auto fieldResInfo = fieldLayout->findOffsetAttr(kind))
+                {
+                    fieldBindingIndex += fieldResInfo->getOffset();
+                    fieldBindingSpace += fieldResInfo->getSpace();
+                }
+                nameHintSB.reduceLength(nameSBLength);
+                if (auto fieldNameHint = field->getKey()->findDecoration<IRNameHintDecoration>())
+                {
+                    if (nameHintSB.getLength() != 0)
+                        nameHintSB << ".";
+                    nameHintSB << fieldNameHint->getName();
+                }
+                fieldParentInfo.outerParam = field;
+                auto fieldVal = createGLSLGlobalVaryingsImpl(
+                    context,
+                    codeGenContext,
+                    builder,
+                    field->getFieldType(),
+                    fieldLayout,
+                    fieldLayout->getTypeLayout(),
+                    kind,
+                    stage,
+                    fieldBindingIndex,
+                    fieldBindingSpace,
+                    declarator,
+                    &fieldParentInfo,
+                    field,
+                    nameHintSB);
+
+                ScalarizedTupleValImpl::Element element = {};
+                if (fieldVal.flavor != ScalarizedVal::Flavor::none)
+                    element.val = fieldVal;
+                element.key = field->getKey();
+
+                tupleValImpl->elements.add(element);
+            }
+
+            return ScalarizedVal::tuple(tupleValImpl);
         }
-
-        return ScalarizedVal::tuple(tupleValImpl);
     }
 
     // Default case is to fall back on the simple behavior
