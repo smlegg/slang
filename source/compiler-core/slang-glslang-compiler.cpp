@@ -489,10 +489,18 @@ static SlangResult locateGlslangSpirvDownstreamCompiler(
 #endif
 
     // Load the slang-glslang library with versioned name on Mac/Linux
-#if SLANG_WINDOWS_FAMILY
-    String libraryName = "slang-glslang";
+#if _DEBUG
+    #if SLANG_WINDOWS_FAMILY
+        String libraryName = "slang-glslangd";
+    #else
+        String libraryName = String("slang-glslangd-") + SLANG_VERSION_NUMERIC;
+    #endif
 #else
-    String libraryName = String("slang-glslang-") + SLANG_VERSION_NUMERIC;
+    #if SLANG_WINDOWS_FAMILY
+        String libraryName = "slang-glslang";
+    #else
+        String libraryName = String("slang-glslang-") + SLANG_VERSION_NUMERIC;
+    #endif
 #endif
     SLANG_RETURN_ON_FAIL(DownstreamCompilerUtil::loadSharedLibrary(
         path,
