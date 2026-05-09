@@ -3118,6 +3118,11 @@ struct VariableReflection
             (SlangReflectionVariable*)this,
             (SlangReflectionGeneric*)generic);
     }
+
+    char const* getSemantic(size_t* length)
+    {
+        return spReflectionVariable_GetSemantic((SlangReflectionVariable*)this, length);
+    }
 };
 
 struct VariableLayoutReflection

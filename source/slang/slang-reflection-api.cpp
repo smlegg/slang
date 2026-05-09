@@ -3432,6 +3432,24 @@ SLANG_API SlangReflectionVariable* spReflectionVariable_applySpecializations(
     return convert(substDeclRef);
 }
 
+ SLANG_API const char *spReflectionVariable_GetSemantic(SlangReflectionVariable* inVar, size_t* length)
+ {
+    auto var = convert(inVar).getDecl();
+
+    if (!var)
+        return nullptr;
+
+    HLSLSemantic* modifier = var->findModifier<HLSLSemantic>();
+
+    if (!modifier || !modifier->name.hasContent())
+        return nullptr;
+
+    if (length)
+        *length = modifier->name.getContentLength();
+
+    return modifier->name.getContent().begin();
+ }
+
 // Variable Layout Reflection
 
 SLANG_API SlangReflectionVariable* spReflectionVariableLayout_GetVariable(

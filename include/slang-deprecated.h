@@ -720,6 +720,7 @@ extern "C"
     SLANG_API SlangReflectionVariable* spReflectionVariable_applySpecializations(
         SlangReflectionVariable* var,
         SlangReflectionGeneric* generic);
+    SLANG_API const char *spReflectionVariable_GetSemantic(SlangReflectionVariable* var, size_t* length);
 
     // Variable Layout Reflection
 
