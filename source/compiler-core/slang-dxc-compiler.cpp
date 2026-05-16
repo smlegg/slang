@@ -745,7 +745,7 @@ SlangResult DXCDownstreamCompiler::compile(const CompileOptions& inOptions, IArt
     }
 
     // If asking for PDB extract it.
-    if (options.m_debugInfoFormat == SLANG_DEBUG_INFO_FORMAT_PDB)
+    if (options.m_debugInfoFormat == SLANG_DEBUG_INFO_FORMAT_DEFAULT || options.m_debugInfoFormat == SLANG_DEBUG_INFO_FORMAT_PDB)
     {
         ComPtr<IDxcResult> dxcResult;
         if (SLANG_SUCCEEDED(dxcOperationResult->QueryInterface(dxcResult.writeRef())))
