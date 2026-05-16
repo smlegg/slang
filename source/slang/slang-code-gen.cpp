@@ -816,6 +816,31 @@ SlangResult CodeGenContext::emitWithDownstreamForEntryPoints(ComPtr<IArtifact>& 
             break;
         }
 
+        switch (getTargetProgram()->getOptionSet().getDebugInfoFormat())
+        {
+            case DebugInfoFormat::Default:
+                options.m_debugInfoFormat = SLANG_DEBUG_INFO_FORMAT_DEFAULT;
+                break;
+            case DebugInfoFormat::C7:
+                options.m_debugInfoFormat = SLANG_DEBUG_INFO_FORMAT_C7;
+                break;
+            case DebugInfoFormat::Pdb:
+                options.m_debugInfoFormat = SLANG_DEBUG_INFO_FORMAT_PDB;
+                break;
+            case DebugInfoFormat::Stabs:
+                options.m_debugInfoFormat = SLANG_DEBUG_INFO_FORMAT_STABS;
+                break;
+            case DebugInfoFormat::Coff:
+                options.m_debugInfoFormat = SLANG_DEBUG_INFO_FORMAT_COFF;
+                break;
+            case DebugInfoFormat::Dwarf:
+                options.m_debugInfoFormat = SLANG_DEBUG_INFO_FORMAT_DWARF;
+                break;
+            default:
+                SLANG_ASSERT(!"Unhandled debug info format");
+                break;
+        }
+
         switch (getTargetProgram()->getOptionSet().getFloatingPointMode())
         {
         case FloatingPointMode::Default:

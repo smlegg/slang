@@ -17,6 +17,7 @@ enum class FloatingPointMode : SlangFloatingPointModeIntegral;
 enum class FloatingPointDenormalMode : SlangFpDenormalModeIntegral;
 enum class OptimizationLevel : SlangOptimizationLevelIntegral;
 enum class DebugInfoLevel : SlangDebugInfoLevelIntegral;
+enum class DebugInfoFormat : SlangDebugInfoFormatIntegral;
 enum class CodeGenTarget : SlangCompileTargetIntegral;
 
 struct CompilerOptionValue
@@ -454,6 +455,11 @@ struct CompilerOptionSet
     DebugInfoLevel getDebugInfoLevel()
     {
         return getEnumOption<DebugInfoLevel>(CompilerOptionName::DebugInformation);
+    }
+
+    DebugInfoFormat getDebugInfoFormat()
+    {
+        return getEnumOption<DebugInfoFormat>(CompilerOptionName::DebugInformationFormat);
     }
 
     SlangLanguageVersion getLanguageVersion()
